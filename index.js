@@ -37,28 +37,22 @@ swarm.on('connection', (conn) => {
 
 const topic = crypto.randomBytes(32);
 const topicHex = b4a.toString(topic, 'hex');
-pipe.write(JSON.stringify({ type: 'topic', key: topicHex }))
+pipe.write(JSON.stringify({ type: 'ready' }))
 
 pipe.on('data', async (data) => {
   const msg = JSON.parse(Buffer.from(data).toString())
 
-  if (msg.type === 'create') {
+  if (msg.type === 'join') {
+    const topic = crypto.hash(b4a.from(msg.roomName))
     const discovery = swarm.join(topic, {client: true, server: true })
     await discovery.flushed();
-    console.log('Created room, topic:', topicHex)
+    console.log('Joined room', msg.roomName)
   }
 
-  if (msg.type === 'join') {
-    const joinTopic = b4a.from(msg.key, 'hex');
-    const discovery = swarm.join(joinTopic, {client: true, server: true })
-    await discovery.flushed()
-    console.log('Joined room, topic:', msg.key)
-  }
-
-  if (msg.type === 'message') {
+  if (msg.type === 'message' || msg.type === 'draw') {
     pipe.write(data)
     for (const conn of peers) {
-      conn.write(data)
+      conn.write(data);
     }
   }
 })

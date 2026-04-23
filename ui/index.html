@@ -12,8 +12,9 @@
       color: #e0e0e0;
       font-family: sans-serif;
       display: flex;
-      flex-direction:column;
+      flex-direction: row;
       height: 100vh;
+      overflow: hidden;
     }
 
     #bar {
@@ -27,6 +28,76 @@
       border-radius: 8px 8px 0 0;
       z-index: 2;
     }
+
+    /* CANVAS PANEL */
+    #canvas-panel {
+      flex: 65;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #333;
+      overflow: hidden;
+    }
+
+    #toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid #333;
+      align-items:center;
+      -webkit-app-region: no-drag;
+    }
+
+    #toolbar button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #2a2a3e;
+      color: #e0e0e0;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    #toolbar button.active {
+      background: #2d6a4f;
+      border-color: #2d6a4f;
+    }
+
+    #toolbar input[type="color"] {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: none;
+      padding: 0;
+    }
+
+    #toolbar input[type="range"] {
+      width: 80px;
+    }
+
+    #toolbar .seperator {
+      width: 1px;
+      height: 24px;
+      background: #444;
+      margin: 0 4px;
+    }
+
+    canvas {
+      flex: 1;
+      cursor: crosshair;
+      display: block;
+      background: white;
+    }
+
+    /* CHAT PANEL */
+    #chat-panel {
+      flex: 35;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
     #topic {
       font-size: 0.7rem;
       color: #888;
@@ -34,6 +105,7 @@
       word-break: break-all;
       border-bottom: 1px solid #333;
     }
+
     #messages {
       flex: 1;
       overflow-y: auto;
@@ -46,9 +118,10 @@
       padding: 8px 12px;
       border-radius: 8px;
       background: #2a2a3e;
-      max-width: 80%;
+      max-width: 90%;
       word-break: break-word;
     }
+
     .message.mine {
       background: #1a472a;
       align-self: flex-end;
@@ -84,6 +157,8 @@
       font-size: 1rem;
     }
     #send:hover { background: #40916c; }
+    
+    /* JOIN SCREEN */
     #join-screen {
       position: absolute;
       top: 0; left: 0;
@@ -99,7 +174,7 @@
     }
     #join-screen h2 { font-size: 2rem; color: #e0e0e0; }
     #join-screen p { color: #888; }
-    #join-screen hr {width: 100%; border-color: #333; }
+
     #join-screen input {
       width: 100%;
       max-width: 500px;
@@ -109,6 +184,7 @@
       background: #2a2a3e;
       color: #e0e0e0;
       font-size: 1rem;
+      outline: none;
     }
     #join-screen button {
       padding: 10px 24px;
@@ -123,25 +199,43 @@
     #join-screen button:hover {
       background: #40916c;
     }
-    </style>
+  </style>
 </head>
 <body>
   <div id="bar"><pear-ctrl></pear-ctrl></div>
-  <div id="topic">Topic: <span id="topic-key">waiting...</span></div>
   <div id="join-screen">
     <h2>P2P Chat</h2>
-    <p>Create a new room or join an existing one</p>
-    <button id="create-btn">Create New Room</button>
-    <hr>
-    <p>Or join an existing room:</p>
-    <input id="join-input" type="text" placeholder="Paste topic key here..."/>
+    <p>Enter a room name to get started</p>
+    <input id="room-input" type="text" placeholder="Enter room name..." />
     <button id="join-btn">Join Room</button>
   </div>
-  <div id="messages"></div>
-  <div id="input-area">
-    <input id="input" type="text" placeholder="Type a message..." />
-    <button id="send">Send</button>
+
+  <!-- CANVAS PANEL -->
+  <div id="canvas-panel">
+    <div id="toolbar">
+      <button id="tool-pen" class="active">Pen</button>
+      <button id="tool-line">Line</button>
+      <button id="tool-rect">Rectangle</button>
+      <button id="tool-circle">Circle</button>
+      <div class="seperator"></div>
+      <input type="color" id="color-picker" value="#e0e0e0" title="Colour">
+      <input type="range" id="stroke-width" min="1" max="20" value="3" title="stroke width">
+      <div class="seperator"></div>
+      <button id="tool-clear">Clear</button>
+    </div>
+    <canvas id="canvas" willreadfrequently="true"></canvas>
   </div>
+
+  <!-- CHAT PANEL -->
+  <div id="chat-panel">
+    <div id="topic">Room: <span id="topic-key">-</span></div>
+    <div id="messages"></div>
+    <div id="input-area">
+      <input id="input" type="text" placeholder="Type a message..." />
+      <button id="send">Send</button>
+    </div>
+  </div>
+
   <script type="module" src="./app.js"></script>
 </body>
 </html>
