@@ -8,6 +8,7 @@ const sendEl = document.getElementById('send')
 const joinScreenEl = document.getElementById('join-screen');
 const roomInputEl = document.getElementById('room-input');
 const joinBtnEl = document.getElementById('join-btn')
+let penPoints = [];
 
 let myId = Math.random().toString(36).slice(2, 8)
 const pipe = pearPipe();
@@ -108,8 +109,7 @@ tools.forEach(tool => {
   }
 })
 
-document.getElementById('color-picker').oninput = (e) => { currentWidth = parseInt(e.target.value)
-}
+document.getElementById('color-picker').oninput = (e) => { currentColor = e.target.value }
 
 document.getElementById('tool-clear').onclick = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -131,6 +131,7 @@ canvas.addEventListener('mousedown', (e) => {
   const pos = getPos(e);
   startX = pos.x;
   startY = pos.y;
+  penPoints = [pos];
   snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height)
   ctx.beginPath()
   ctx.moveTo(startX, startY)
@@ -152,9 +153,10 @@ canvas.addEventListener('mousemove', (e) => {
     ctx.lineJoin = 'round'
     ctx.lineTo(pos.x, pos.y)
     ctx.stroke()
+    penPoints.push(pos)
   } else {
     ctx. putImageData(snapshot, 0, 0)
-    drawShape(currentTool, startX, startY, pos.x, pos.y, currentColor, currentWidth)
+    drawShape({tool: currentTool, x1: startX, y1: startY, x2: pos.x, y2: pos.y, color: currentColor, width: currentWidth })
   }
 
   drawShape(currentTool, startX, startY, pos.x, pos.y, currentColor, currentWidth)
@@ -165,37 +167,55 @@ canvas.addEventListener('mouseup', (e) => {
   isDrawing = false
   const pos = getPos(e);
 
-  broadcastDraw({
-    type: 'draw',
-    tool: currentTool,
-    x1: startX, y1: startY,
-    x2: pos.x, y2: pos.y,
-    color: currentColor,
-    width: currentWidth
-  })
+  if (currentTool === 'pen') {    
+    broadcastDraw({
+      type: 'draw',
+      tool: 'pen',
+      points: penPoints,
+      color: currentColor,
+      width: currentWidth
+    })
+  } else {
+    broadcastDraw({
+      type: 'draw',
+      tool: currentTool,
+      x1: startX, y1: startY,
+      x2: pos.x, y2: pos.y,
+      color: currentColor,
+      width: currentWidth
+    })
+  }
 })
 
 canvas.addEventListener('mouseleave', () => { isDrawing = false 
 })
 
-function drawShape(tool, x1, y1, x2, y2, color, width) {
-  ctx.stokeStyle = color;
-  ctx.lineWidth = width;
+function drawShape(payload) {
+  ctx.strokeStyle = payload.color;
+  ctx.lineWidth = payload.width;
   ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
-  if (tool === 'pen') {
-    ctx.lineTo(x2, y2)
-    ctx.stroke()
-  } else if (tool === 'line') {
+  if (payload.tool === 'pen') {
     ctx.beginPath()
-    ctx.moveTo(x1, y1)
-    ctx.lineTo(x2, y2)
+    ctx.moveTo(payload.points[0].x, payload.points[0].y)
+    for (const p of payload.points) {
+      ctx.lineTo(p.x, p.y)
+    }
     ctx.stroke()
-  } else if (tool === 'circle') {
-    const rx = (x2 - x1) / 2
-    const ry = (y2 - y1) / 2
+  } else if (payload.tool === 'line') {
     ctx.beginPath()
-    ctx.ellipse(x1 + rx, y1 + ry, Math.abs(rx), Math.abs(ry), 0, 0, 2 * Math.PI)
+    ctx.moveTo(payload.x1, payload.y1)
+    ctx.lineTo(payload.x2, payload.y2)
+    ctx.stroke()
+  } else if (payload.tool === 'rect') {
+    ctx.beginPath()
+    ctx.strokeRect(payload.x1, payload.y1, payload.x2 - payload.x1, payload.y2 - payload.y1)
+  } else if (payload.tool === 'circle') {
+    const rx = (payload.x2 - payload.x1) / 2
+    const ry = (payload.y2 - payload.y1) / 2
+    ctx.beginPath()
+    ctx.ellipse(payload.x1 + rx, payload.y1 + ry, Math.abs(rx), Math.abs(ry), 0, 0, 2 * Math.PI)
     ctx.stroke()
   }
 }
@@ -212,5 +232,5 @@ function handleRemoteDraw(payload) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     return
   }
-  drawShape(payload.tool, payload.x1, payload.y1, payload.y2, payload.color, payload.width)
+  drawShape(payload)
 }

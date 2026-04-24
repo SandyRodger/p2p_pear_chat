@@ -16,9 +16,11 @@ pear run -- dev .
 
 ## To chat
 
-1. One person clicks 'Create new Room' and shares the topic key
-2. The other person clicks 'join room' and pastes the key in.
-3. Hey presto. Chat
+1. Enter a room name. If you want to join an existing room you need to know the room name and enter that. But if you want to begin a new room then think up a name and input that.
+
+2. Someone else enters the same room name.
+
+3. Hey presto. Chat, draw, be free.
 
 ## Open a 2nd local instance for testing:
 
